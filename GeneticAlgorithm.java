@@ -8,6 +8,8 @@ import java.util.Random;
 
 public class GeneticAlgorithm {
 
+    private static final int MAX_ATTEMPS = 75;
+
     /**
      * Cria um cromossoma com uma dimensão dada.
      *
@@ -161,9 +163,10 @@ public class GeneticAlgorithm {
      * @throws InvalidProbabilityException a probabilidade é inválida
      * @throws ChromosomesDifferentLengthsException os cromossomas têm diferentes dimensões
      */
-    public static String findResult(int populationLen, int chromosomeLen, Fitness fitness, double p_c, double p_m) throws InvalidPopulationLengthException, InvalidChromosomeLengthException, InvalidProbabilityException, ChromosomesDifferentLengthsException {
+    public static String findResult(int populationLen, int chromosomeLen, Fitness fitness, double p_c, double p_m) throws InvalidPopulationLengthException, InvalidChromosomeLengthException, InvalidProbabilityException, ChromosomesDifferentLengthsException, ProblemHasNoResultException {
 
         String res = null;
+        int populationCount = 0;
 
         do {
             Collection<String> population = GeneticAlgorithm.populate(populationLen, chromosomeLen);
@@ -171,6 +174,8 @@ public class GeneticAlgorithm {
             int count = 0; // dimensão da nova população
 
             while (count < populationLen) {
+
+                if (populationCount > MAX_ATTEMPS) throw new ProblemHasNoResultException();
 
                 String chromosome_1 = GeneticAlgorithm.rouletteWheelSelection(GeneticAlgorithm.mapPopulationFitness(population, fitness));
                 if (chromosome_1 == null) continue;
@@ -197,6 +202,8 @@ public class GeneticAlgorithm {
             for (String chromosome : population)
                 if (fitness.fitness(chromosome) == 1)
                     res = chromosome;
+
+            populationCount++;
 
         } while (res == null);
 
