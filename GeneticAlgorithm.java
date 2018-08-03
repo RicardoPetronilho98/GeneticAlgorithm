@@ -4,14 +4,15 @@ import javafx.util.Pair;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Random;
 
 public class GeneticAlgorithm {
 
-    private static final int MAX_ATTEMPS = 75;
+    private static final int MAX_GENERATIONS = 16384;
 
     /**
-     * Cria um cromossoma com uma dimensão dada.
+     * Cria um cromossoma aleatóio com uma dimensão dada.
      *
      * @param length dimensão do cromossoma
      * @return o novo cromossoma criado
@@ -69,32 +70,27 @@ public class GeneticAlgorithm {
      * @throws IndexOutOfBoundsException índice - index - dado é inválido
      * @throws ChromosomesDifferentLengthsException dimensão de ambos os cromossomas são diferentes
      */
-    private static String[] crossover(String chromosome1, String chromosome2, int index, double p) throws InvalidProbabilityException, ChromosomesDifferentLengthsException, IndexOutOfBoundsException {
+    private static String[] crossover(String chromosome1, String chromosome2, int index) throws ChromosomesDifferentLengthsException, IndexOutOfBoundsException {
 
-        if (p < 0 || p > 1) throw new InvalidProbabilityException(Double.toString(p));
-        else if (chromosome1.length() != chromosome2.length()) throw new ChromosomesDifferentLengthsException();
+        if (chromosome1.length() != chromosome2.length()) throw new ChromosomesDifferentLengthsException();
         else if (index < 0 || index >= chromosome1.length()) throw new IndexOutOfBoundsException(Integer.toString(index));
 
-        if (Math.random() < p) {
-            StringBuilder res1 = new StringBuilder();
-            StringBuilder res2 = new StringBuilder();
+        StringBuilder res1 = new StringBuilder();
+        StringBuilder res2 = new StringBuilder();
 
-            // primeira parte de ambos os cromossomas mantêm-se iguais
-            for (int i = 0; i < index; i++) {
-                res1.append(chromosome1.charAt(i));
-                res2.append(chromosome2.charAt(i));
-            }
-
-            // segunda parte de ambos os cromossomas são trocados
-            for (int i = index; i < chromosome1.length(); i++) {
-                res1.append(chromosome2.charAt(i));
-                res2.append(chromosome1.charAt(i));
-            }
-
-            return new String[]{res1.toString(), res2.toString()};
+        // primeira parte de ambos os cromossomas mantêm-se iguais
+        for (int i = 0; i < index; i++) {
+            res1.append(chromosome1.charAt(i));
+            res2.append(chromosome2.charAt(i));
         }
 
-        else return null;
+        // segunda parte de ambos os cromossomas são trocados
+        for (int i = index; i < chromosome1.length(); i++) {
+            res1.append(chromosome2.charAt(i));
+            res2.append(chromosome1.charAt(i));
+        }
+
+        return new String[]{res1.toString(), res2.toString()};
     }
 
     /**
@@ -104,7 +100,7 @@ public class GeneticAlgorithm {
      * @param fitness interface que implementa o método fitness()
      * @return o conjunto de (cromossoma, fitness)
      */
-    private static Collection<Pair<String, Double>> mapPopulationFitness(Collection<String> population, Fitness fitness){
+    private static Collection<Pair<String, Double>> mapPopulationFitness(List<String> population, Fitness fitness){
         Collection<Pair<String, Double>> res = new ArrayList<>(population.size());
         population.forEach(chromosome -> res.add(new Pair<>(chromosome, fitness.fitness(chromosome))));
         return res;
@@ -119,32 +115,76 @@ public class GeneticAlgorithm {
      * @throws InvalidPopulationLengthException dimensão da população é inválida
      * @throws InvalidChromosomeLengthException dimensção de cada cromossoma é inválida
      */
-    private static Collection<String> populate(int populationLen, int chromosomeLen) throws InvalidPopulationLengthException, InvalidChromosomeLengthException{
+    private static List<String> populate(int populationLen, int chromosomeLen) throws InvalidPopulationLengthException, InvalidChromosomeLengthException{
 
         if (populationLen <= 0) throw new InvalidPopulationLengthException(Integer.toString(populationLen));
 
-        Collection<String> res = new ArrayList<>();
+        List<String> res = new ArrayList<>(populationLen);
         for(int i = 0; i < populationLen; i++) res.add(generate(chromosomeLen));
         return res;
     }
 
     /**
-     * Retorna um cromossoma possível como resposta ao problema contextualizado.
+     * Retorna o melhor cromossoma possível como resposta ao problema contextualizado.
      *
-     * @param fitnesses conjunto de pares (cromossoma, fitness)
+     * @param population população
      * @return o possível cromossoma como resposta
      */
-    private static String rouletteWheelSelection(Collection<Pair<String, Double>> fitnesses){
-        final double p = Math.random();
-        String res = null;
-        double ac = 0d;
-        for(Pair<String, Double> pair: fitnesses) {
-            ac += pair.getValue();
-            if (ac >= p) {
-                res = pair.getKey();
-                break;
+    private static String[] selection(List<String> population, Fitness fitness){
+
+        String[] parents = new String[2];
+        Collection<Pair<String, Double>> fitnesses = mapPopulationFitness(population, fitness);
+        Random r = new Random();
+        double p, ac, sumFit = 0;
+
+        for (Pair<String, Double> pair: fitnesses) sumFit += pair.getValue();
+
+        for(int i = 0; i < 2; i++) {
+            parents[i] = population.get(r.nextInt(population.size()));
+            p = sumFit * r.nextDouble(); // p < sumFit
+            ac = 0.0;
+
+            for (Pair<String, Double> pair : fitnesses) {
+                ac += pair.getValue();
+                if (ac >= p) {
+                    parents[i] = pair.getKey();
+                    break;
+                }
             }
         }
+
+        return parents;
+    }
+
+    private static List<String> evolve(List<String> population, Fitness fitness, double p_c, double p_m) throws InvalidProbabilityException, ChromosomesDifferentLengthsException {
+
+        List<String> new_population = new ArrayList<>(population.size());
+        String[] new_chromosomes;
+
+        while (new_population.size() < population.size()){
+
+            new_chromosomes = selection(population, fitness); // SELEÇÃO
+
+            if (p_c < Math.random()) { // CROSSOVER
+                new_chromosomes = crossover(new_chromosomes[0], new_chromosomes[1], new Random().nextInt(new_chromosomes[0].length()));
+            }
+
+            // MUTAÇÃO
+            new_population.add(mutate(new_chromosomes[0], p_m));
+            new_population.add(mutate(new_chromosomes[1], p_m));
+        }
+
+        return new_population;
+    }
+
+    private static String hasFoundResult(List<String> population, Fitness fitness){
+
+        String res = null;
+
+        for (String chromosome: population)
+            if (fitness.fitness(chromosome) == 1)
+                res = chromosome;
+
         return res;
     }
 
@@ -165,47 +205,18 @@ public class GeneticAlgorithm {
      */
     public static String findResult(int populationLen, int chromosomeLen, Fitness fitness, double p_c, double p_m) throws InvalidPopulationLengthException, InvalidChromosomeLengthException, InvalidProbabilityException, ChromosomesDifferentLengthsException, ProblemHasNoResultException {
 
-        String res = null;
-        int populationCount = 0;
+        String res;
+        int genCount = 0;
+        List<String> population = populate(populationLen, chromosomeLen); // população inicial
 
-        do {
-            Collection<String> population = GeneticAlgorithm.populate(populationLen, chromosomeLen);
-            Collection<String> new_population = new ArrayList<>();
-            int count = 0; // dimensão da nova população
+        while ( (res = hasFoundResult(population, fitness)) == null ) {
+            if (genCount % 10 == 0 && genCount != 0) System.err.println("\n(evolving) geração nº => " + genCount);
+            // if (genCount > MAX_GENERATIONS) throw new ProblemHasNoResultException();
+            population = evolve(population, fitness, p_c, p_m); // evolução da população
+            genCount++;
+        }
 
-            while (count < populationLen) {
-
-                if (populationCount > MAX_ATTEMPS) throw new ProblemHasNoResultException();
-
-                String chromosome_1 = GeneticAlgorithm.rouletteWheelSelection(GeneticAlgorithm.mapPopulationFitness(population, fitness));
-                if (chromosome_1 == null) continue;
-                population.remove(chromosome_1); // para o chromosome_2 não ser igual ao 1
-
-                String chromosome_2 = GeneticAlgorithm.rouletteWheelSelection(GeneticAlgorithm.mapPopulationFitness(population, fitness));
-                population.add(chromosome_1); // para não aldrabar a população
-                if (chromosome_2 == null) continue;
-
-                String[] new_chromosomes = GeneticAlgorithm.crossover(chromosome_1, chromosome_2, new Random().nextInt(chromosome_1.length()), p_c);
-                if (new_chromosomes == null) continue;
-
-                new_chromosomes[0] = GeneticAlgorithm.mutate(new_chromosomes[0], p_m);
-                new_chromosomes[1] = GeneticAlgorithm.mutate(new_chromosomes[1], p_m);
-
-                new_population.add(new_chromosomes[0]);
-                new_population.add(new_chromosomes[1]);
-
-                population = new_population;
-
-                count += 2;
-            }
-
-            for (String chromosome : population)
-                if (fitness.fitness(chromosome) == 1)
-                    res = chromosome;
-
-            populationCount++;
-
-        } while (res == null);
+        System.out.println("\ngeração nº => " + genCount);
 
         return res;
     }
