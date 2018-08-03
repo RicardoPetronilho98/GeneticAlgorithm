@@ -2,10 +2,7 @@ package geneticalgorithms;
 
 import javafx.util.Pair;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class GeneticAlgorithm {
 
@@ -133,6 +130,7 @@ public class GeneticAlgorithm {
     private static String[] selection(List<String> population, Fitness fitness){
 
         String[] parents = new String[2];
+
         Collection<Pair<String, Double>> fitnesses = mapPopulationFitness(population, fitness);
         Random r = new Random();
         double p, ac, sumFit = 0;
@@ -140,7 +138,7 @@ public class GeneticAlgorithm {
         for (Pair<String, Double> pair: fitnesses) sumFit += pair.getValue();
 
         for(int i = 0; i < 2; i++) {
-            parents[i] = population.get(r.nextInt(population.size()));
+
             p = sumFit * r.nextDouble(); // p < sumFit
             ac = 0.0;
 
@@ -164,6 +162,8 @@ public class GeneticAlgorithm {
         while (new_population.size() < population.size()){
 
             new_chromosomes = selection(population, fitness); // SELEÇÃO
+
+            // System.out.println(Arrays.toString(new_chromosomes));
 
             if (p_c < Math.random()) { // CROSSOVER
                 new_chromosomes = crossover(new_chromosomes[0], new_chromosomes[1], new Random().nextInt(new_chromosomes[0].length()));
@@ -210,7 +210,7 @@ public class GeneticAlgorithm {
         List<String> population = populate(populationLen, chromosomeLen); // população inicial
 
         while ( (res = hasFoundResult(population, fitness)) == null ) {
-            if (genCount % 10 == 0 && genCount != 0) System.err.println("\n(evolving) geração nº => " + genCount);
+            if (genCount % 50 == 0 && genCount != 0) System.err.println("\n(evolving) geração nº => " + genCount);
             // if (genCount > MAX_GENERATIONS) throw new ProblemHasNoResultException();
             population = evolve(population, fitness, p_c, p_m); // evolução da população
             genCount++;
