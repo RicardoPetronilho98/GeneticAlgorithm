@@ -15,7 +15,7 @@ public class GeneticAlgorithm {
      * @param length dimensão do cromossoma
      * @param alphabet alfabeto
      * @return o novo cromossoma criado
-     * @throws InvalidChromosomeLengthException dimensão - length - do cromossoma é inválida
+     * @throws InvalidChromosomeLengthException dimensão do cromossoma é inválida
      */
     protected static String generate(int length, String alphabet) throws InvalidChromosomeLengthException {
 
@@ -40,7 +40,7 @@ public class GeneticAlgorithm {
      * @param p probabilidade de ocorrer a mutação em cada posição do cromossoma (0 <= p <= 1)
      * @param alphabet alfabeto
      * @return o cromossoma mutado
-     * @throws InvalidProbabilityException probabilidade - p - dada é inválida
+     * @throws InvalidProbabilityException probabilidade dada é inválida
      */
     protected static String mutate(String chromosome, double p, String alphabet) throws InvalidProbabilityException {
 
@@ -69,13 +69,11 @@ public class GeneticAlgorithm {
      * @param chromosome2 cromossoma 2
      * @param index posição a partir da qual ocorre a troca
      * @return os dois novos cromossomas resultantes da crossover
-     * @throws IndexOutOfBoundsException índice - index - dado é inválido
      * @throws ChromosomesDifferentLengthsException dimensão de ambos os cromossomas são diferentes
      */
-    protected static String[] crossover(String chromosome1, String chromosome2, int index) throws ChromosomesDifferentLengthsException, IndexOutOfBoundsException {
+    protected static String[] crossover(String chromosome1, String chromosome2, int index) throws ChromosomesDifferentLengthsException {
 
         if (chromosome1.length() != chromosome2.length()) throw new ChromosomesDifferentLengthsException();
-        else if (index < 0 || index >= chromosome1.length()) throw new IndexOutOfBoundsException(Integer.toString(index));
 
         StringBuilder res1 = new StringBuilder();
         StringBuilder res2 = new StringBuilder();
@@ -120,7 +118,7 @@ public class GeneticAlgorithm {
      *
      * @param population conjunto de cromossomas
      * @param fitness interface que implementa o método fitness()
-     * @return o conjunto de (cromossoma, fitness)
+     * @return o conjunto de pares (cromossoma, fitness)
      */
     protected static Collection<Pair<String, Double>> mapPopulationFitness(List<String> population, Fitness fitness){
         Collection<Pair<String, Double>> res = new ArrayList<>(population.size());
@@ -231,7 +229,7 @@ public class GeneticAlgorithm {
 
         long after = System.currentTimeMillis();
 
-        System.out.println("\ngeração nº => " + genCount + " | millis => " + (after - before) );
+        System.out.println("\ngeneration nº => " + genCount + " | millis => " + (after - before) );
 
         return res;
     }
