@@ -1,4 +1,4 @@
-package geneticalgorithms;
+package ga;
 
 import java.util.*;
 

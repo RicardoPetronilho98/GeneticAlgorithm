@@ -1,4 +1,4 @@
-package geneticalgorithms;
+package ga;
 
 public class ChromosomesDifferentLengthsException extends Exception {
 

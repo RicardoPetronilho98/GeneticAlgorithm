@@ -1,4 +1,4 @@
-package geneticalgorithms;
+package ga;
 
 public class InvalidProbabilityException extends Exception {
 

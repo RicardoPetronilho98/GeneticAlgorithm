@@ -1,4 +1,4 @@
-package geneticalgorithms;
+package ga;
 
 public class BinaryGeneticAlgorithmTeste {
 
@@ -17,7 +17,7 @@ public class BinaryGeneticAlgorithmTeste {
 
     // variáveis de controlo da evolução
     private static final double p_c = 0.6d; // crossover
-    private static final double p_m = 0.02d; // mutação
+    private static final double p_m = 0.03d; // mutação
 
     public static void main(String[] args){
 
@@ -120,18 +120,4 @@ public class BinaryGeneticAlgorithmTeste {
             e.printStackTrace();
         }
     }
-
-    /*
-        #### #############
-        #  #X  #         #
-        #  #   ########  #
-        #  #   #         #
-        #  #        ###  #
-        #  #########  #  #
-        #             #  #
-        #  ############  #
-        #                #
-        ##################
-     */
-
 }
